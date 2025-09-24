@@ -1,4 +1,3 @@
-
 # Floating Dock - Chrome Extension
 
 A simple macOS-like floating dock that appears on every webpage and provides quick navigation shortcuts.
