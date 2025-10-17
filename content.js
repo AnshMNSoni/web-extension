@@ -17,79 +17,120 @@ const dockHTML = `
     </div>
   </div>
 </div>
-`;
+`
 
-document.body.insertAdjacentHTML("beforeend", dockHTML);
+document.body.insertAdjacentHTML("beforeend", dockHTML)
 
-const dock = document.getElementById("dock");
-const addBtn = document.getElementById("addBtn");
-const modal = document.getElementById("dock-modal");
-const cancelBtn = document.getElementById("cancelBtn");
-const saveBtn = document.getElementById("saveBtn");
-const nameInput = document.getElementById("nameInput");
-const urlInput = document.getElementById("urlInput");
-const iconInput = document.getElementById("iconInput");
-
-// Show modal
-addBtn.addEventListener("click", () => {
-  modal.style.display = "flex";
-});
-
-// Close modal
-cancelBtn.addEventListener("click", () => {
-  modal.style.display = "none";
-});
+const dock = document.getElementById("dock")
+const addBtn = document.getElementById("addBtn")
+const modal = document.getElementById("dock-modal")
+const cancelBtn = document.getElementById("cancelBtn")
+const saveBtn = document.getElementById("saveBtn")
+const nameInput = document.getElementById("nameInput")
+const urlInput = document.getElementById("urlInput")
+const iconInput = document.getElementById("iconInput")
 
 // Function to check if a string is an image URL
 function isImageURL(url) {
-  return /\.(jpg|jpeg|png|gif|svg|webp|bmp)$/i.test(url);
+  return /\.(jpg|jpeg|png|gif|svg|webp|bmp)$/i.test(url)
 }
 
-// Save new shortcut
-saveBtn.addEventListener("click", () => {
-  const name = nameInput.value.trim();
-  const url = urlInput.value.trim();
-  const icon = iconInput.value.trim() || "🔗";
+// Declare chrome variable
+const chrome = window.chrome
 
-  if (!url) return;
+function loadShortcuts() {
+  chrome.storage.local.get(["shortcuts"], (result) => {
+    const shortcuts = result.shortcuts || []
+    shortcuts.forEach((shortcut) => {
+      renderShortcut(shortcut)
+    })
+  })
+}
 
-  const newShortcut = document.createElement("div");
-  newShortcut.className = "shortcut";
-  newShortcut.setAttribute("title", name || url);
-  newShortcut.setAttribute("data-url", url);
+function renderShortcut(shortcutData) {
+  const { name, url, icon } = shortcutData
+
+  const newShortcut = document.createElement("div")
+  newShortcut.className = "shortcut"
+  newShortcut.setAttribute("title", name || url)
+  newShortcut.setAttribute("data-url", url)
 
   // If icon is an image URL, use <img>; else use emoji/text
   if (isImageURL(icon)) {
-    const img = document.createElement("img");
-    img.src = icon;
-    img.alt = name || url;
-    img.style.width = "100%";
-    img.style.height = "100%";
-    img.style.objectFit = "cover";
-    img.style.borderRadius = "12px";
-    newShortcut.appendChild(img);
+    const img = document.createElement("img")
+    img.src = icon
+    img.alt = name || url
+    img.style.width = "100%"
+    img.style.height = "100%"
+    img.style.objectFit = "cover"
+    img.style.borderRadius = "12px"
+    newShortcut.appendChild(img)
   } else {
-    newShortcut.textContent = icon;
+    newShortcut.textContent = icon
   }
 
   // Click to open URL
   newShortcut.addEventListener("click", () => {
-    window.open(url, "_blank");
-  });
+    window.open(url, "_blank")
+  })
 
   // Right-click to delete
   newShortcut.addEventListener("contextmenu", (e) => {
-    e.preventDefault();
+    e.preventDefault()
     if (confirm(`Delete shortcut "${name || url}"?`)) {
-      dock.removeChild(newShortcut);
+      dock.removeChild(newShortcut)
+      deleteShortcutFromStorage(url)
     }
-  });
+  })
 
-  dock.insertBefore(newShortcut, addBtn);
-  modal.style.display = "none";
+  dock.insertBefore(newShortcut, addBtn)
+}
+
+function saveShortcutToStorage(shortcutData) {
+  chrome.storage.local.get(["shortcuts"], (result) => {
+    const shortcuts = result.shortcuts || []
+    shortcuts.push(shortcutData)
+    chrome.storage.local.set({ shortcuts })
+  })
+}
+
+function deleteShortcutFromStorage(url) {
+  chrome.storage.local.get(["shortcuts"], (result) => {
+    const shortcuts = result.shortcuts || []
+    const filtered = shortcuts.filter((s) => s.url !== url)
+    chrome.storage.local.set({ shortcuts: filtered })
+  })
+}
+
+// Show modal
+addBtn.addEventListener("click", () => {
+  modal.style.display = "flex"
+})
+
+// Close modal
+cancelBtn.addEventListener("click", () => {
+  modal.style.display = "none"
+})
+
+// Save new shortcut
+saveBtn.addEventListener("click", () => {
+  const name = nameInput.value.trim()
+  const url = urlInput.value.trim()
+  const icon = iconInput.value.trim() || "🔗"
+
+  if (!url) return
+
+  const shortcutData = { name, url, icon }
+
+  renderShortcut(shortcutData)
+  saveShortcutToStorage(shortcutData)
+
+  modal.style.display = "none"
 
   // Reset inputs
-  nameInput.value = "";
-  urlInput.value = "";
-  iconInput.value = "";
-});
+  nameInput.value = ""
+  urlInput.value = ""
+  iconInput.value = ""
+})
+
+loadShortcuts()
