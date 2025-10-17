@@ -1,3 +1,5 @@
+console.log("[v0] Floating Dock: Initializing...")
+
 // Inject dock HTML dynamically
 const dockHTML = `
 <div class="floating-dock-root" id="dockRoot">
@@ -20,6 +22,7 @@ const dockHTML = `
 `
 
 document.body.insertAdjacentHTML("beforeend", dockHTML)
+console.log("[v0] Floating Dock: HTML injected")
 
 const dock = document.getElementById("dock")
 const addBtn = document.getElementById("addBtn")
@@ -39,7 +42,13 @@ function isImageURL(url) {
 const chrome = window.chrome
 
 function loadShortcuts() {
+  if (!chrome || !chrome.storage) {
+    console.error("[v0] Chrome storage API not available")
+    return
+  }
+
   chrome.storage.local.get(["shortcuts"], (result) => {
+    console.log("[v0] Loaded shortcuts:", result.shortcuts)
     const shortcuts = result.shortcuts || []
     shortcuts.forEach((shortcut) => {
       renderShortcut(shortcut)
@@ -87,24 +96,37 @@ function renderShortcut(shortcutData) {
 }
 
 function saveShortcutToStorage(shortcutData) {
+  if (!chrome || !chrome.storage) {
+    console.error("[v0] Chrome storage API not available")
+    return
+  }
+
   chrome.storage.local.get(["shortcuts"], (result) => {
     const shortcuts = result.shortcuts || []
     shortcuts.push(shortcutData)
     chrome.storage.local.set({ shortcuts })
+    console.log("[v0] Shortcut saved:", shortcutData)
   })
 }
 
 function deleteShortcutFromStorage(url) {
+  if (!chrome || !chrome.storage) {
+    console.error("[v0] Chrome storage API not available")
+    return
+  }
+
   chrome.storage.local.get(["shortcuts"], (result) => {
     const shortcuts = result.shortcuts || []
     const filtered = shortcuts.filter((s) => s.url !== url)
     chrome.storage.local.set({ shortcuts: filtered })
+    console.log("[v0] Shortcut deleted:", url)
   })
 }
 
 // Show modal
 addBtn.addEventListener("click", () => {
   modal.style.display = "flex"
+  console.log("[v0] Modal opened")
 })
 
 // Close modal
@@ -118,7 +140,10 @@ saveBtn.addEventListener("click", () => {
   const url = urlInput.value.trim()
   const icon = iconInput.value.trim() || "🔗"
 
-  if (!url) return
+  if (!url) {
+    alert("Please enter a URL")
+    return
+  }
 
   const shortcutData = { name, url, icon }
 
@@ -134,3 +159,4 @@ saveBtn.addEventListener("click", () => {
 })
 
 loadShortcuts()
+console.log("[v0] Floating Dock: Ready!")

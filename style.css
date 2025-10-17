@@ -2,7 +2,7 @@
 .floating-dock-root {
   position: fixed;
   top: 50%;
-  right: -40px;
+  right: 10px;
   transform: translateY(-50%);
   z-index: 999999;
   transition: right 0.3s ease, filter 0.3s ease;
@@ -10,7 +10,7 @@
 
 /* Hover effect */
 .floating-dock-root:hover {
-  right: 10px;
+  right: 15px;
   filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.5));
 }
 
